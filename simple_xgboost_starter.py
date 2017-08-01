@@ -85,4 +85,4 @@ for c in sub.columns[sub.columns != 'ParcelId']:
     sub[c] = p_test
 
 print('Writing csv ...')
-sub.to_csv('xgb_starter.csv', index=False, float_format='%.4f') # Thanks to @inversion
+sub.to_csv('output/simple_xgboost_starter.csv', index=False, float_format='%.4f') # Thanks to @inversion
