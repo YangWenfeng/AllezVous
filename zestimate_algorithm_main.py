@@ -5,13 +5,13 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 import gc
-import matplotlib.pyplot as plt
-
-def showPlot(data):
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-    ax.hist(data, bins=10)
-    plt.show()
+# import matplotlib.pyplot as plt
+#
+# def showPlot(data):
+#     fig = plt.figure()
+#     ax = fig.add_subplot(1, 1, 1)
+#     ax.hist(data, bins=10)
+#     plt.show()
 
 
 def one_hot_encoding(cols, train):
@@ -190,7 +190,7 @@ p_test = clf.predict(d_test)
 #
 # p_combined = (p_test + p_lasso) / 2
 
-sub = pd.read_csv('data/sample_submission.csv')
+sub = pd.read_csv('input/sample_submission.csv')
 
 for c in sub.columns[sub.columns != 'ParcelId']:
     sub[c] = p_test
