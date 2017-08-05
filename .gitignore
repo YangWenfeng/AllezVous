@@ -1,6 +1,8 @@
 .ipynb_checkpoints/
 input/
 output/
+submit/
+log/
 *.pyc
 .idea
 *.csv
