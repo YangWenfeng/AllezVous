@@ -176,6 +176,7 @@ def logerror_regression(train, props, sample):
 
     p_test = clf.predict(d_test)
     sub_df = sample.copy()
+    sub_df = sub_df.drop(['parcelid'], axis=1)
 
     for c in sub_df.columns[sub_df.columns != 'ParcelId']:
         sub_df[c] = p_test
