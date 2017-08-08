@@ -61,22 +61,24 @@
 
         // init select
         select = document.getElementById("data-select");
-        names = ['prop_regionidcounty_json', 'prop_regionidcity_json', 'prop_regionidneighborhood_json', 'prop_regionidzip_json',
-        'train_regionidcounty_json', 'train_regionidcity_json', 'train_regionidneighborhood_json', 'train_regionidzip_json'];
 
-        for (var i = 0; i<names.length; i++){
+        first_name = '';
+        for (var name in data){
+            if (first_name === '') {
+              first_name = name
+            }
             var opt = document.createElement('option');
-            opt.value = names[i];
-            opt.innerHTML = names[i];
+            opt.value = name;
+            opt.innerHTML = name;
             select.appendChild(opt);
         }
 
         function changeData(name) {
-            console.log(name);
-            heatmap.setData(eval(name))
+            console.log('plot data[' + name + ']');
+            heatmap.setData(data[name])
         }
 
-        heatmap.setData(eval(names[0]));
+        heatmap.setData(data[first_name]);
     </script>
   </body>
 </html>
