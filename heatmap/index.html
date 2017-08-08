@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <title>Zillow Googlemaps Heatmap</title>
+    <style>
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0; font-family:sans-serif; }
+      #map-canvas { height: 100% }
+      h1 { position:absolute; background:black; color:white; padding:10px; font-weight:200; z-index:10000;}
+    </style>
+    <!-- https://developers.google.com/maps/documentation/javascript/get-api-key -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAHz-3mihRn5PgWcGWfgrdS7oNpyponwZc" type="text/javascript"></script>
+    <script src="./heatmap.min.js"></script>
+    <script src="./gmaps-heatmap.js"></script>
+    <script src="./data.js"></script>
+  </head>
+  <body>
+    <h1>Zillow Googlemaps Heatmap<br/>
+      <select id="data-select" onchange="changeData(this.value)"></select>
+    </h1>
+    <div id="map-canvas"></div>
+    
+    <script>
+
+        // map center
+        // var myLatlng = new google.maps.LatLng(25.6586, -80.3568);
+        // var myLatlng = new google.maps.LatLng(34144442.0, -118654084.0);
+        var myLatlng = new google.maps.LatLng(33.998073053285353, -118.3060942702713);
+        // map options,
+        var myOptions = {
+          zoom: 9,
+          center: myLatlng
+        };
+        // standard map
+        map = new google.maps.Map(document.getElementById("map-canvas"), myOptions);
+        // heatmap layer
+        heatmap = new HeatmapOverlay(map, 
+          {
+            // radius should be small ONLY if scaleRadius is true (or small radius is intended)
+            "radius": 0.05,
+            "maxOpacity": 0.75, 
+            "minOpacity": 0.25, 
+            // scales the radius based on map zoom
+            "scaleRadius": true, 
+            // if set to false the heatmap uses the global maximum for colorization
+            // if activated: uses the data maximum within the current map boundaries 
+            //   (there will always be a red spot with useLocalExtremas true)
+            "useLocalExtrema": false,
+            // which field name in your data represents the latitude - default "lat"
+            latField: 'lat',
+            // which field name in your data represents the longitude - default "lng"
+            lngField: 'lng',
+            // which field name in your data represents the data value - default "value"
+            valueField: 'cnt'
+          }
+        );
+        // train_regionidcity_json, train_regionidcounty_json, train_regionidneighborhood_json, train_regionidzip_json
+        
+
+        // init select
+        select = document.getElementById("data-select");
+        names = ['prop_regionidcounty_json', 'prop_regionidcity_json', 'prop_regionidneighborhood_json', 'prop_regionidzip_json',
+        'train_regionidcounty_json', 'train_regionidcity_json', 'train_regionidneighborhood_json', 'train_regionidzip_json'];
+
+        for (var i = 0; i<names.length; i++){
+            var opt = document.createElement('option');
+            opt.value = names[i];
+            opt.innerHTML = names[i];
+            select.appendChild(opt);
+        }
+
+        function changeData(name) {
+            console.log(name);
+            heatmap.setData(eval(name))
+        }
+
+        heatmap.setData(eval(names[0]));
+    </script>
+  </body>
+</html>
