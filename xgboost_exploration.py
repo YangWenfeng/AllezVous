@@ -8,13 +8,17 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 import sys
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import LabelEncoder
+from xgboost.sklearn import XGBRegressor
+from sklearn import cross_validation, metrics   #Additional scklearn functions
+from sklearn.model_selection import GridSearchCV, train_test_split   #Perforing grid search
+
 
 OUTLIER_UPPER_BOUND = 0.419
 OUTLIER_LOWER_BOUND = -0.4
 FOLDS = 5
 
-csv_name = sys.argv[1]
+csv_name = sys.argv[1] if len(sys.argv) >= 2 else 'xgboost_exploration.csv'
 
 print('Reading training data, properties and test data.')
 train = pd.read_csv("input/train_2016_v2.csv")
@@ -67,20 +71,46 @@ train_drop_cols = ['parcelid', 'logerror', 'transactiondate']
 print 'Drop train_with_prop columns: %s' % ','.join(train_drop_cols)
 x_train = train_with_prop.drop(train_drop_cols, axis=1)
 y_train = train_with_prop['logerror'].values
-d_train = xgb.DMatrix(x_train, y_train)
+# d_train = xgb.DMatrix(x_train, y_train)
+#
+# # xgboost params
+# params = {'eta': 0.02, 'objective': 'reg:linear', 'eval_metric': 'mae', 'max_depth': 4, 'silent': 1}
+# estop = 100
+# cv_res = xgb.cv(params, d_train, num_boost_round=1000, early_stopping_rounds=estop, nfold=FOLDS,
+#                 verbose_eval=10, show_stdv=False)
+#
+# # https://stackoverflow.com/questions/40500638/xgboost-cv-and-best-iteration
+# best_nrounds = int((cv_res.shape[0] - estop) / (1. - 1. / FOLDS))
+# num_boost_rounds = int(round(len(cv_res) * np.sqrt(FOLDS/(FOLDS-1.))))
+# print 'Find best_nrounds = %d, and num_boost_rounds = %d, cv_res.shape[0] = %d' % (best_nrounds, num_boost_rounds, cv_res.shape[0])
+#
+# model = xgb.train(params, d_train, num_boost_round=best_nrounds)
+#
 
-# xgboost params
-params = {'eta': 0.02, 'objective': 'reg:linear', 'eval_metric': 'mae', 'max_depth': 4, 'silent': 1}
-estop = 100
-cv_res = xgb.cv(params, d_train, num_boost_round=1000, early_stopping_rounds=estop, nfold=FOLDS,
-                verbose_eval=10, show_stdv=False)
+# Split the dataset in two equal parts
+X_train_split, X_test_split, y_train_split, y_test_split = train_test_split(x_train, y_train, test_size=0.5, random_state=0)
 
-# https://stackoverflow.com/questions/40500638/xgboost-cv-and-best-iteration
-best_nrounds = int((cv_res.shape[0] - estop) / (1. - 1. / FOLDS))
-num_boost_rounds = int(round(len(cv_res) * np.sqrt(FOLDS/(FOLDS-1.))))
-print 'Find best_nrounds = %d, and num_boost_rounds = %d, cv_res.shape[0] = %d' % (best_nrounds, num_boost_rounds, cv_res.shape[0])
+xgb_reg = XGBRegressor(objective='reg:linear')
 
-model = xgb.train(params, d_train, num_boost_round=best_nrounds)
+xgb_params = {
+    'learning_rate': [0.01, 0.1],
+    'n_estimators': [1000],
+    'max_depth': [3, 5, 7, 9],
+    'gamma': [0, 1],
+    'subsample': [0.7, 1],
+    'colsample_bytree': [0.7, 1]
+}
+
+fit_params = {
+    'early_stopping_rounds': 30,
+    'eval_metric': 'mae',
+    'eval_set': [[x_train, y_train]]
+}
+
+grid = GridSearchCV(xgb_reg, xgb_params, cv=5, fit_params=fit_params)
+grid.fit(X_train_split, y_train_split)
+print(grid.best_score_)
+print(grid.best_params_)
 
 print ('Building test set...')
 sample['parcelid'] = sample['ParcelId']
@@ -88,8 +118,8 @@ sample_with_prop = sample.merge(prop, how='left', on='parcelid')
 d_test = xgb.DMatrix(sample_with_prop[x_train.columns])
 
 print ('Predicting on test...')
-p_test = model.predict(d_test)
-
+# p_test = model.predict(d_test)
+p_test = grid.predict(sample_with_prop[x_train.columns])
 sample = sample.drop(['parcelid'], axis=1)
 for col in sample.columns:
     if col == 'ParcelId':
@@ -98,4 +128,3 @@ for col in sample.columns:
 
 print ('Writing to CSV...')
 sample.to_csv('output/' + csv_name, index=False, float_format='%.4f')
-
