@@ -97,16 +97,18 @@ print 'Find best_nrounds = %d, and num_boost_rounds = %d' % (best_nrounds, num_b
 model = xgb.train(params, d_train, num_boost_round=num_boost_rounds)
 
 print ('Building test set...')
-test = sample.copy()
-test['parcelid'] = test['ParcelId']
-test_with_prop = test.merge(prop, how='left', on='parcelid')
-d_test = xgb.DMatrix(test_with_prop[x_train.columns])
+sample['parcelid'] = sample['ParcelId']
+sample_with_prop = sample.merge(prop, how='left', on='parcelid')
+d_test = xgb.DMatrix(sample_with_prop[x_train.columns])
 
 print ('Predicting on test...')
-
 p_test = model.predict(d_test)
-for col in sample.columns[sample.columns != 'ParcelId']:
-    test[col] = p_test
+
+sample = sample.drop(['parcelid'], axis=1)
+for col in sample.columns:
+    if col == 'ParcelId':
+        continue
+    sample[col] = p_test
 
 print ('Writing to CSV...')
 sample.to_csv('output/xgboost_exploration.csv', index=False, float_format='%.4f')
