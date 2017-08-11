@@ -99,7 +99,7 @@ model = xgb.train(params, d_train, num_boost_round=num_boost_rounds)
 print ('Building test set...')
 test = sample.copy()
 test['parcelid'] = test['ParcelId']
-test_with_prop = sample.merge(prop, how='left', on='parcelid')
+test_with_prop = test.merge(prop, how='left', on='parcelid')
 d_test = xgb.DMatrix(test_with_prop[x_train.columns])
 
 print ('Predicting on test...')
