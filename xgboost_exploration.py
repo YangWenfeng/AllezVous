@@ -107,7 +107,7 @@ best_nrounds = int((cv_res.shape[0] - estop) / (1. - 1. / FOLDS))
 num_boost_rounds = int(round(len(cv_res) * np.sqrt(FOLDS/(FOLDS-1.))))
 print 'Find best_nrounds = %d, and num_boost_rounds = %d, cv_res.shape[0] = %d' % (best_nrounds, num_boost_rounds, cv_res.shape[0])
 
-model = xgb.train(params, d_train, num_boost_round=num_boost_rounds)
+model = xgb.train(params, d_train, num_boost_round=best_nrounds)
 
 print ('Building test set...')
 sample['parcelid'] = sample['ParcelId']
