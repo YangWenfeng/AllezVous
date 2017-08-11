@@ -88,6 +88,6 @@ for column in test.columns[test.columns != 'ParcelId']:
     test[column] = p_test
 
 print('Writing to csv.')
-test.to_csv('output/xgboot_without_outliers.csv', index=False, float_format='%.4f')
+test.to_csv('output/xgboost_without_outliers.csv', index=False, float_format='%.4f')
 
 print('Congratulation!!!')
