@@ -8,11 +8,14 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 import os
+import sys
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 OUTLIER_UPPER_BOUND = 0.419
 OUTLIER_LOWER_BOUND = -0.4
 FOLDS = 5
+
+csv_name = sys.argv[1]
 
 def load_data():
     """Load dataset"""
@@ -124,5 +127,5 @@ for col in sample.columns:
     sample[col] = p_test
 
 print ('Writing to CSV...')
-sample.to_csv('output/xgboost_exploration.csv', index=False, float_format='%.4f')
+sample.to_csv('output/' + csv_name, index=False, float_format='%.4f')
 
