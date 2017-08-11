@@ -7,9 +7,12 @@ https://www.kaggle.com/c/zillow-prize-1/discussion/37261
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-import gc
 import os
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+
+OUTLIER_UPPER_BOUND = 0.419
+OUTLIER_LOWER_BOUND = -0.4
+FOLDS = 5
 
 def load_data():
     """Load dataset"""
@@ -76,6 +79,17 @@ for col in one_hot_encode_cols:
 print 'Merge train and properties on parcelid...'
 train_with_prop = train.merge(prop, how='left', on='parcelid')
 
+print('Original training data with properties shape: {}'
+      .format(train_with_prop.shape))
+
+print('Dropping out outliers.')
+train_with_prop = train_with_prop[
+    train_with_prop.logerror > OUTLIER_LOWER_BOUND]
+train_with_prop = train_with_prop[
+    train_with_prop.logerror < OUTLIER_UPPER_BOUND]
+print('New training data with properties without outliers shape: {}'
+      .format(train_with_prop.shape))
+
 train_drop_cols = ['parcelid', 'logerror', 'transactiondate']
 print 'Drop train_with_prop columns: %s' % ','.join(train_drop_cols)
 x_train = train_with_prop.drop(train_drop_cols, axis=1)
@@ -85,9 +99,8 @@ d_train = xgb.DMatrix(x_train, y_train)
 # xgboost params
 params = {'eta': 0.02, 'objective': 'reg:linear', 'eval_metric': 'mae', 'max_depth': 4, 'silent': 1}
 estop = 100
-FOLDS = 5
 cv_res = xgb.cv(params, d_train, num_boost_round=1000, early_stopping_rounds=estop, nfold=FOLDS,
-       verbose_eval=10, show_stdv=False)
+                verbose_eval=10, show_stdv=False)
 
 # https://stackoverflow.com/questions/40500638/xgboost-cv-and-best-iteration
 best_nrounds = int((cv_res.shape[0] - estop) / (1 - 1 / FOLDS))
