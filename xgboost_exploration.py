@@ -7,7 +7,6 @@ https://www.kaggle.com/c/zillow-prize-1/discussion/37261
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-import os
 import sys
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
@@ -17,39 +16,10 @@ FOLDS = 5
 
 csv_name = sys.argv[1]
 
-def load_data():
-    """Load dataset"""
-    train_p = 'input/train_p'
-    prop_p = 'input/prop_p'
-    sample_p = 'input/sample_p'
-
-    if os.path.exists(train_p):
-        train = pd.read_pickle(train_p)
-    else:
-        train = pd.read_csv('input/train_2016_v2.csv',
-                            parse_dates=['transactiondate'])
-        train.to_pickle(train_p)
-
-    if os.path.exists(prop_p):
-        prop = pd.read_pickle(prop_p)
-    else:
-        prop = pd.read_csv('input/properties_2016.csv')
-        print('Binding to float32')
-        for col, dtype in zip(prop.columns, prop.dtypes):
-            if dtype == np.float64:
-                prop[col] = prop[col].astype(np.float32)
-        prop.to_pickle(prop_p)
-
-    if os.path.exists(sample_p):
-        sample = pd.read_pickle(sample_p)
-    else:
-        sample = pd.read_csv('input/sample_submission.csv')
-        sample.to_pickle(sample_p)
-    return prop, train, sample
-
-
-print 'Loading data...'
-prop, train, sample = load_data()
+print('Reading training data, properties and test data.')
+train = pd.read_csv("input/train_2016_v2.csv")
+prop = pd.read_csv('input/properties_2016.csv')
+sample = pd.read_csv('input/sample_submission.csv')
 
 print 'Processing properties...'
 prop_drop_cols = ['propertyzoningdesc', 'propertycountylandusecode', 'latitude', 'longitude']
