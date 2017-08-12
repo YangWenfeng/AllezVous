@@ -5,7 +5,7 @@ Explore with XGBoost, by Yang
 3. one hot encode
 4. gridsearch and cross validation
 """
-
+import numpy as np
 import pandas as pd
 import xgboost as xgb
 import sys
@@ -49,8 +49,8 @@ one_hot_encode_cols.extend(set(obj_cols) - set(one_hot_encode_cols))
 print 'One Hot Encoding features: %s' % ','.join(one_hot_encode_cols)
 for col in one_hot_encode_cols:
     one_hot = pd.get_dummies(prop[col], prefix=col)
-    df = prop.drop(col, axis=1)
-    df = prop.join(one_hot)
+    prop = prop.drop(col, axis=1)
+    prop = prop.join(one_hot)
 
 
 print 'Merge train and properties on parcelid...'
