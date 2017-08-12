@@ -41,17 +41,21 @@ for col in obj_cols:
     label_encoder = label_encoder.fit(prop[col].values[:])
     prop[col] = label_encoder.transform(prop[col].values[:])
 
-# one_hot_encode_cols = ['airconditioningtypeid', 'architecturalstyletypeid', 'buildingclasstypeid',
-#                        'heatingorsystemtypeid', 'storytypeid', 'regionidcity', 'regionidcounty',
-#                        'regionidneighborhood', 'regionidzip']
-# one_hot_encode_cols.extend(set(obj_cols) - set(one_hot_encode_cols))
-#
-# print 'One Hot Encoding features: %s' % ','.join(one_hot_encode_cols)
-# for col in one_hot_encode_cols:
-#     one_hot = pd.get_dummies(prop[col], prefix=col)
-#     prop = prop.drop(col, axis=1)
-#     prop = prop.join(one_hot)
+one_hot_encode_cols = ['airconditioningtypeid', 'architecturalstyletypeid', 'buildingclasstypeid',
+                       'heatingorsystemtypeid', 'storytypeid', 'regionidcity', 'regionidcounty',
+                       'regionidneighborhood', 'regionidzip']
+one_hot_encode_cols.extend(set(obj_cols) - set(one_hot_encode_cols))
 
+print 'One Hot Encoding features: %s' % ','.join(one_hot_encode_cols)
+for col in one_hot_encode_cols:
+    one_hot = pd.get_dummies(prop[col], prefix=col)
+    prop = prop.drop(col, axis=1)
+    prop = prop.join(one_hot)
+
+print('Binding to float32')
+for col, dtype in zip(prop.columns, prop.dtypes):
+    if dtype == np.float64:
+        prop[col] = prop[col].astype(np.float32)
 
 print 'Merge train and properties on parcelid...'
 train_with_prop = train.merge(prop, how='left', on='parcelid')
