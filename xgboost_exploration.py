@@ -89,10 +89,12 @@ y_train = train_with_prop['logerror']
 # model = xgb.train(params, d_train, num_boost_round=best_nrounds)
 #
 
-xgb_reg = XGBRegressor(learning_rate=0.1, n_estimators=1000, eval_metric='mae',
-                       early_stopping_rounds=30, n_jobs=4, verbose_eval=10, verbose=10)
+xgb_reg = XGBRegressor(eval_metric='mae', early_stopping_rounds=30, n_jobs=4,
+                       verbose_eval=10, verbose=10)
 xgb_params = {
-    'max_depth': [4, 6]
+    'max_depth': [3, 4, 5],
+    'learning_rate': [0.02, 0.033, 0.1],
+    'n_estimators': [350, 500, 1000]
 }
 
 xgb_model = xgb.XGBRegressor()
