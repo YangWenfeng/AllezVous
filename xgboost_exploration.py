@@ -1,7 +1,9 @@
 """
-exploration with XGBoost, by Yang
-Function 'load_data' is from Kaggle,
-https://www.kaggle.com/c/zillow-prize-1/discussion/37261
+Explore with XGBoost, by Yang
+1. fillna and label encode on object features
+2. train with outliers
+3. one hot encode
+4. gridsearch and cross validation
 """
 
 import numpy as np
@@ -10,8 +12,7 @@ import xgboost as xgb
 import sys
 from sklearn.preprocessing import LabelEncoder
 from xgboost.sklearn import XGBRegressor
-from sklearn import cross_validation, metrics   #Additional scklearn functions
-from sklearn.model_selection import GridSearchCV, train_test_split   #Perforing grid search
+from sklearn.model_selection import GridSearchCV
 
 
 OUTLIER_UPPER_BOUND = 0.419
@@ -20,7 +21,7 @@ FOLDS = 5
 
 csv_name = sys.argv[1] if len(sys.argv) >= 2 else 'xgboost_exploration.csv'
 
-print('Reading training data, properties and test data.')
+print('Reading train data, properties and test data...')
 train = pd.read_csv("input/train_2016_v2.csv")
 prop = pd.read_csv('input/properties_2016.csv')
 sample = pd.read_csv('input/sample_submission.csv')
@@ -70,8 +71,8 @@ print('New training data with properties without outliers shape: {}'
 train_drop_cols = ['parcelid', 'logerror', 'transactiondate']
 print 'Drop train_with_prop columns: %s' % ','.join(train_drop_cols)
 x_train = train_with_prop.drop(train_drop_cols, axis=1)
-y_train = train_with_prop['logerror'].values
-# d_train = xgb.DMatrix(x_train, y_train)
+y_train = train_with_prop['logerror']
+# d_train = xgb.DMatrix(x_train, y_train.values)
 #
 # # xgboost params
 # params = {'eta': 0.02, 'objective': 'reg:linear', 'eval_metric': 'mae', 'max_depth': 4, 'silent': 1}
@@ -82,35 +83,23 @@ y_train = train_with_prop['logerror'].values
 # # https://stackoverflow.com/questions/40500638/xgboost-cv-and-best-iteration
 # best_nrounds = int((cv_res.shape[0] - estop) / (1. - 1. / FOLDS))
 # num_boost_rounds = int(round(len(cv_res) * np.sqrt(FOLDS/(FOLDS-1.))))
-# print 'Find best_nrounds = %d, and num_boost_rounds = %d, cv_res.shape[0] = %d' % (best_nrounds, num_boost_rounds, cv_res.shape[0])
+# print 'Find best_nrounds = %d, and num_boost_rounds = %d, cv_res.shape[0] = %d' % (
+# best_nrounds, num_boost_rounds, cv_res.shape[0])
 #
 # model = xgb.train(params, d_train, num_boost_round=best_nrounds)
 #
 
-# Split the dataset in two equal parts
-X_train_split, X_test_split, y_train_split, y_test_split = train_test_split(x_train, y_train, test_size=0.5, random_state=0)
-
-xgb_reg = XGBRegressor(objective='reg:linear')
-
+xgb_reg = XGBRegressor(learning_rate=0.1, n_estimators=1000, eval_metric='mae',
+                       early_stopping_rounds=30, verbose_eval=10)
 xgb_params = {
-    'learning_rate': [0.01, 0.1],
-    'n_estimators': [1000],
-    'max_depth': [3, 5, 7, 9],
-    'gamma': [0, 1],
-    'subsample': [0.7, 1],
-    'colsample_bytree': [0.7, 1]
+    'max_depth': [4, 6]
 }
 
-fit_params = {
-    'early_stopping_rounds': 30,
-    'eval_metric': 'mae',
-    'eval_set': [[x_train, y_train]]
-}
-
-grid = GridSearchCV(xgb_reg, xgb_params, cv=5, fit_params=fit_params)
-grid.fit(X_train_split, y_train_split)
-print(grid.best_score_)
-print(grid.best_params_)
+xgb_model = xgb.XGBRegressor()
+grid = GridSearchCV(xgb_reg, xgb_params, cv=5)
+grid.fit(x_train.values, y_train.values)
+print 'best_score_', grid.best_score_
+print 'best_params_', grid.best_params_
 
 print ('Building test set...')
 sample['parcelid'] = sample['ParcelId']
