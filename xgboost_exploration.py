@@ -74,9 +74,9 @@ y_train = train_with_prop['logerror']
 d_train = xgb.DMatrix(x_train, y_train)
 
 # xgboost params
-params = {'eta': 0.02, 'objective': 'reg:linear', 'eval_metric': 'mae', 'max_depth': 4, 'silent': 1}
+params = {'eta': 0.033, 'objective': 'reg:linear', 'eval_metric': 'mae', 'max_depth': 4, 'silent': 1}
 estop = 30
-cv_res = xgb.cv(params, d_train, num_boost_round=500, early_stopping_rounds=estop, nfold=FOLDS,
+cv_res = xgb.cv(params, d_train, num_boost_round=1000, early_stopping_rounds=estop, nfold=FOLDS,
                 verbose_eval=10, show_stdv=False)
 
 # https://stackoverflow.com/questions/40500638/xgboost-cv-and-best-iteration
