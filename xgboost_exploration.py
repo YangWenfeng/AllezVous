@@ -26,7 +26,11 @@ prop = pd.read_csv('input/properties_2016.csv')
 sample = pd.read_csv('input/sample_submission.csv')
 
 print 'Processing properties...'
-prop_drop_cols = ['propertyzoningdesc', 'propertycountylandusecode', 'latitude', 'longitude']
+prop_drop_cols = ['propertyzoningdesc', 'propertycountylandusecode']  # , 'latitude', 'longitude'
+
+print 'Add new feature latlng to prop'
+prop['latlng'] = prop['latitude'] + prop['longitude']
+
 print 'Drop properties\' columns: %s' % ','.join(prop_drop_cols)
 prop = prop.drop(prop_drop_cols, axis=1)
 
