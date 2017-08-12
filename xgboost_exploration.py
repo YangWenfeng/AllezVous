@@ -13,7 +13,7 @@ import sys
 from sklearn.preprocessing import LabelEncoder
 from xgboost.sklearn import XGBRegressor
 from sklearn.model_selection import GridSearchCV
-
+from sklearn.metrics import mean_absolute_error
 
 OUTLIER_UPPER_BOUND = 0.419
 OUTLIER_LOWER_BOUND = -0.4
@@ -90,21 +90,25 @@ y_train = train_with_prop['logerror']
 #
 
 xgb_reg = XGBRegressor(learning_rate=0.1, n_estimators=1000, eval_metric='mae',
-                       early_stopping_rounds=30, verbose_eval=10)
+                       early_stopping_rounds=30, n_jobs=4, verbose_eval=10, verbose=10)
 xgb_params = {
     'max_depth': [4, 6]
 }
 
 xgb_model = xgb.XGBRegressor()
 grid = GridSearchCV(xgb_reg, xgb_params, cv=5)
-grid.fit(x_train.values, y_train.values)
+grid.fit(x_train, y_train)
+print 'cv_results_', grid.cv_results_
 print 'best_score_', grid.best_score_
 print 'best_params_', grid.best_params_
+
+pred_train = grid.predict(x_train)
+print 'mean_absolute_error', mean_absolute_error(y_train, pred_train)
 
 print ('Building test set...')
 sample['parcelid'] = sample['ParcelId']
 sample_with_prop = sample.merge(prop, how='left', on='parcelid')
-d_test = xgb.DMatrix(sample_with_prop[x_train.columns])
+# d_test = xgb.DMatrix(sample_with_prop[x_train.columns])
 
 print ('Predicting on test...')
 # p_test = model.predict(d_test)
