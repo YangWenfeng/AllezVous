@@ -85,7 +85,7 @@ num_boost_rounds = int(round(len(cv_res) * np.sqrt(FOLDS/(FOLDS-1.))))
 print 'Find num_boost_rounds = %d, cv_res.shape[0] = %d' % (num_boost_rounds, cv_res.shape[0])
 
 model = xgb.train(params, d_train, num_boost_round=num_boost_rounds)
-pred_train = model.predict(x_train)
+pred_train = model.predict(d_train)
 
 print 'mean_absolute_error', mean_absolute_error(y_train, pred_train)
 
