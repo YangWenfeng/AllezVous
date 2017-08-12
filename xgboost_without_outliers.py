@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import mean_absolute_error
 
 OUTLIER_UPPER_BOUND = 0.419
 OUTLIER_LOWER_BOUND = -0.4
@@ -75,6 +76,9 @@ num_boost_rounds = int(round(len(cv_result) * np.sqrt(FOLDS/(FOLDS-1))))
 print 'num_boost_rounds = %d' % num_boost_rounds
 model = xgb.train(
     dict(xgb_params, silent=1), d_train, num_boost_round=num_boost_rounds)
+
+pred_train = model.predict(d_train)
+print 'mean_absolute_error', mean_absolute_error(y_train, pred_train)
 
 print('Building test set.')
 test['parcelid'] = test['ParcelId']
