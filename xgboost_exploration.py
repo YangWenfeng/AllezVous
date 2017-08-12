@@ -6,7 +6,6 @@ Explore with XGBoost, by Yang
 4. gridsearch and cross validation
 """
 
-import numpy as np
 import pandas as pd
 import xgboost as xgb
 import sys
