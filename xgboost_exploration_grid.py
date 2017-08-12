@@ -71,21 +71,22 @@ train_drop_cols = ['parcelid', 'logerror', 'transactiondate']
 print 'Drop train_with_prop columns: %s' % ','.join(train_drop_cols)
 x_train = train_with_prop.drop(train_drop_cols, axis=1)
 y_train = train_with_prop['logerror']
-d_train = xgb.DMatrix(x_train, y_train)
 
-# xgboost params
-params = {'eta': 0.02, 'objective': 'reg:linear', 'eval_metric': 'mae', 'max_depth': 4, 'silent': 1}
-estop = 30
-cv_res = xgb.cv(params, d_train, num_boost_round=500, early_stopping_rounds=estop, nfold=FOLDS,
-                verbose_eval=10, show_stdv=False)
+xgb_reg = XGBRegressor(eval_metric='mae', early_stopping_rounds=30, n_jobs=4,
+                       verbose_eval=10, verbose=10)
+xgb_params = {
+    'max_depth': [3, 4, 5],
+    'learning_rate': [0.02, 0.033, 0.1],
+    'n_estimators': [350, 500, 1000]
+}
 
-# https://stackoverflow.com/questions/40500638/xgboost-cv-and-best-iteration
-# num_boost_rounds = int((cv_res.shape[0] - estop) / (1. - 1. / FOLDS))
-num_boost_rounds = int(round(len(cv_res) * np.sqrt(FOLDS/(FOLDS-1.))))
-print 'Find num_boost_rounds = %d, cv_res.shape[0] = %d' % (num_boost_rounds, cv_res.shape[0])
-
-model = xgb.train(params, d_train, num_boost_round=num_boost_rounds)
-pred_train = model.predict(x_train)
+xgb_model = xgb.XGBRegressor()
+grid = GridSearchCV(xgb_reg, xgb_params, cv=5)
+grid.fit(x_train, y_train)
+print 'cv_results_', grid.cv_results_
+print 'best_score_', grid.best_score_
+print 'best_params_', grid.best_params_
+pred_train = grid.predict(x_train)
 
 print 'mean_absolute_error', mean_absolute_error(y_train, pred_train)
 
@@ -93,9 +94,9 @@ print ('Building test set...')
 sample['parcelid'] = sample['ParcelId']
 sample_with_prop = sample.merge(prop, how='left', on='parcelid')
 
+
 print ('Predicting on test...')
-d_test = xgb.DMatrix(sample_with_prop[x_train.columns])
-p_test = model.predict(d_test)
+p_test = grid.predict(sample_with_prop[x_train.columns])
 sample = sample.drop(['parcelid'], axis=1)
 for col in sample.columns:
     if col == 'ParcelId':
