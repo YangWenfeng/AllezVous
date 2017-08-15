@@ -1,11 +1,12 @@
 """
 Use DBSCAN clustering latitude & longitude on properties
+Inspire by http://geoffboeing.com/2014/08/clustering-to-reduce-spatial-data-set-size/
 """
 import time
 import numpy as np
 import pandas as pd
 from sklearn.cluster import DBSCAN
-from sklearn import metrics
+# from sklearn import metrics
 from geopy.distance import great_circle
 from shapely.geometry import MultiPoint
 
@@ -14,13 +15,11 @@ from shapely.geometry import MultiPoint
 print 'Read properties data.'
 properties = pd.read_csv("../data/properties_2016.csv")
 # properties = pd.read_csv("../data_debug/properties_2016.csv")
-# properties = properties.ix[range(0, 1001, 1)]
+train_coordinates = properties[['latitude', 'longitude']]
+train_coordinates = train_coordinates.astype(np.float32)
+train_coordinates = train_coordinates.fillna(train_coordinates.mean(), inplace=True)
 
-properties = properties[['latitude', 'longitude']]
-properties = properties.astype(np.float32)
-properties = properties.fillna(properties.mean(), inplace=True)
-
-coordinates = properties.as_matrix(columns=['latitude', 'longitude']) / 1e6
+coordinates = train_coordinates.as_matrix(columns=['latitude', 'longitude']) / 1e6
 
 print 'Run DBSCAN cluster.'
 start_time = time.time()
@@ -37,7 +36,8 @@ print('Number of clusters: {}'.format(num_clusters))
 message = 'Clustered {:,} points down to {:,} clusters, for {:.1f}% compression in {:,.2f} seconds'
 print(message.format(len(coordinates), num_clusters, 100*(1 - float(num_clusters) / len(coordinates)),
                      time.time()-start_time))
-print('Silhouette coefficient: {:0.03f}'.format(metrics.silhouette_score(coordinates, cluster_labels)))
+# take long time
+# print('Silhouette coefficient: {:0.03f}'.format(metrics.silhouette_score(coordinates, cluster_labels)))
 
 clusters = pd.Series([coordinates[cluster_labels == n] for n in xrange(num_clusters)])
 print clusters.head()
@@ -54,9 +54,14 @@ centermost_points = clusters.map(get_centermost_point)
 latitude, longitude = zip(*centermost_points)
 
 # from these latitude/longitude create a new df of one representative point for each cluster
-rep_properties_coordinates = pd.DataFrame({'longitude': longitude, 'latitude': latitude})
-print rep_properties_coordinates.head()
+rep_coordinates = pd.DataFrame({'longitude': longitude, 'latitude': latitude})
+print rep_coordinates.head()
 
-rep_properties_coordinates.to_csv('../data/rep_properties_coordinates.csv', index=False)
+properties_latlng_cluster = properties['parcelid']
+properties_latlng_cluster['cluster_label'] = cluster_labels
+properties_latlng_cluster['cluster_latitude'] = [latitude[label] for label in cluster_labels]
+properties_latlng_cluster['cluster_longitude'] = [longitude[label] for label in cluster_labels]
+
+properties_latlng_cluster.to_csv('../data/properties_latlng_cluster.csv', index=False)
 
 print 'done'
