@@ -16,9 +16,8 @@ X = X.fillna(X.mean(), inplace=True)
 X = X.astype(np.float32)
 
 print 'K-means cluster'
-K = range(25, 501, 25)
+K = range(100, 501, 100)
 KM = [kmeans(X, k) for k in K]
-# pickle.dump(KM, open('output/km_cluster_latlng.pl', 'wb'))
 
 print 'Calculate elbow curve'
 centroids = [cent for (cent, var) in KM]
@@ -35,3 +34,5 @@ result = {
     'avgWithinSS': avgWithinSS
 }
 pickle.dump(result, open('../data/km_cluster_latlng_elbow.pl', 'wb'))
+
+print 'done'
