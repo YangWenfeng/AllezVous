@@ -1,9 +1,9 @@
 import pandas as pd
 import json
 
-train_df = pd.read_csv("input/train_2016_v2.csv", parse_dates=["transactiondate"])
-prop_df = pd.read_csv("input/properties_2016.csv")
-train_df = pd.merge(train_df, prop_df, on='parcelid', how='left')
+train = pd.read_csv("../data/train_2016_v2.csv", parse_dates=["transactiondate"])
+properties = pd.read_csv("../data/properties_2016.csv")
+train_with_properties = train.merge(properties, on='parcelid', how='left')
 
 # File heatmap/data.js is like:
 """
@@ -14,19 +14,47 @@ var data = {
 """
 
 data = {}
-for df, name in zip([train_df, prop_df], ['train', 'prop']):
-    for feature in ['regionidcounty', 'regionidcity', 'regionidneighborhood', 'regionidzip']:
+groupby_columns = ['regionidcounty', 'regionidcity', 'regionidneighborhood', 'regionidzip']
+for df, name in zip([train_with_properties, properties], ['train', 'prop']):
+    for feature in groupby_columns:
         # 1e6
         lat_dict = df.groupby([feature])['latitude'].mean()/1e6
         lng_dict = df.groupby([feature])['longitude'].mean()/1e6
         cnt_dict = df.groupby([feature])['parcelid'].count()
 
-        nbh_pdf = pd.DataFrame({'lat': lat_dict.values, 'lng': lng_dict.values, 'cnt': cnt_dict.values})
-        nbh_json = nbh_pdf.to_json(orient='records')
+        tmp = pd.DataFrame({'lat': lat_dict.values, 'lng': lng_dict.values, 'cnt': cnt_dict.values})
+        js = tmp.to_json(orient='records')
 
         key = '%s_%s_json' % (name, feature)
-        val = {'max': cnt_dict.values.max(), 'data': json.loads(nbh_json)}
+        val = {'max': cnt_dict.values.max(), 'data': json.loads(js)}
         data[key] = val
+
+# outlier
+# The lower and upper bounds are gotten from github.com/andrewpiggy
+OUTLIER_UPPER_BOUND = 0.419
+OUTLIER_LOWER_BOUND = -0.4
+
+outlier_index = []
+for i in xrange(len(train_with_properties)):
+    if train_with_properties['logerror'][i] >= OUTLIER_UPPER_BOUND or\
+                    train_with_properties['logerror'][i] <= OUTLIER_LOWER_BOUND:
+        outlier_index.append(i)
+
+
+train_with_properties_outlier = train_with_properties.iloc[outlier_index]
+
+for feature in groupby_columns:
+    # 1e6
+    lat_dict = train_with_properties_outlier.groupby([feature])['latitude'].mean()/1e6
+    lng_dict = train_with_properties_outlier.groupby([feature])['longitude'].mean()/1e6
+    cnt_dict = train_with_properties_outlier.groupby([feature])['parcelid'].count()
+
+    tmp = pd.DataFrame({'lat': lat_dict.values, 'lng': lng_dict.values, 'cnt': cnt_dict.values})
+    js = tmp.to_json(orient='records')
+
+    key = 'outlier_%s_json' % feature
+    val = {'max': cnt_dict.values.max(), 'data': json.loads(js)}
+    data[key] = val
 
 f = open('heatmap/data.js', 'w')
 f.write('var data = %s;' % json.dumps(data))

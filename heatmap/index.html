@@ -12,9 +12,9 @@
     </style>
     <!-- https://developers.google.com/maps/documentation/javascript/get-api-key -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAHz-3mihRn5PgWcGWfgrdS7oNpyponwZc" type="text/javascript"></script>
-    <script src="./heatmap.min.js"></script>
-    <script src="./gmaps-heatmap.js"></script>
-    <script src="./data.js"></script>
+    <script src="heatmap.min.js"></script>
+    <script src="gmaps-heatmap.js"></script>
+    <script src="data.js"></script>
   </head>
   <body>
     <h1>Zillow Googlemaps Heatmap<br/>
@@ -61,15 +61,15 @@
 
         // init select
         select = document.getElementById("data-select");
-
-        first_name = '';
-        for (var name in data){
-            if (first_name === '') {
-              first_name = name
-            }
+        names = [];
+        for (var name in data) {
+            names.push(name);
+        }
+        names = names.sort();
+        for (var i = 0; i < names.length; i++) {
             var opt = document.createElement('option');
-            opt.value = name;
-            opt.innerHTML = name;
+            opt.value = names[i];
+            opt.innerHTML = names[i];
             select.appendChild(opt);
         }
 
@@ -78,7 +78,7 @@
             heatmap.setData(data[name])
         }
 
-        heatmap.setData(data[first_name]);
+        heatmap.setData(data[names[0]]);
     </script>
   </body>
 </html>
