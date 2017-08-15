@@ -10,7 +10,7 @@ from scipy.spatial.distance import cdist
 
 # read properties data
 print 'Read properties data.'
-prop_df = pd.read_csv("input/properties_2016.csv")
+prop_df = pd.read_csv("../data/properties_2016.csv")
 X = prop_df[['latitude', 'longitude']]
 X = X.fillna(X.mean(), inplace=True)
 X = X.astype(np.float32)
@@ -34,6 +34,4 @@ result = {
     'D_k': D_k,
     'avgWithinSS': avgWithinSS
 }
-pickle.dump(KM, open('output/km_cluster_latlng_elbow.pl', 'wb'))
-
-print 'done'
+pickle.dump(result, open('../data/km_cluster_latlng_elbow.pl', 'wb'))
