@@ -57,7 +57,7 @@ latitude, longitude = zip(*centermost_points)
 rep_coordinates = pd.DataFrame({'longitude': longitude, 'latitude': latitude})
 print rep_coordinates.head()
 
-properties_latlng_cluster = properties['parcelid']
+properties_latlng_cluster = properties[['parcelid']]
 properties_latlng_cluster['cluster_label'] = cluster_labels
 properties_latlng_cluster['cluster_latitude'] = [latitude[label] for label in cluster_labels]
 properties_latlng_cluster['cluster_longitude'] = [longitude[label] for label in cluster_labels]
