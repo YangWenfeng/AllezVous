@@ -8,7 +8,7 @@ import gc
 
 print('Loading data ...')
 
-train = pd.read_csv('../data/train_2016.csv')
+train = pd.read_csv('../data/train_2016_v2.csv')
 prop = pd.read_csv('../data/properties_2016.csv')
 
 for c, dtype in zip(prop.columns, prop.dtypes):	
@@ -75,4 +75,4 @@ sub = pd.read_csv('../data/sample_submission.csv')
 for c in sub.columns[sub.columns != 'ParcelId']:
     sub[c] = p_test
 
-sub.to_csv('lgb_starter.csv', index=False, float_format='%.4f')
+sub.to_csv('../data/lgb_starter.csv', index=False, float_format='%.4f')
