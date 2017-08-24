@@ -1,10 +1,10 @@
+import numpy as np
 import pandas as pd
 import json
 
 train = pd.read_csv("../data/train_2016_v2.csv", parse_dates=["transactiondate"])
 properties = pd.read_csv("../data/properties_2016.csv")
 train_with_properties = train.merge(properties, on='parcelid', how='left')
-
 # File heatmap/data.js is like:
 """
 var data = {
@@ -14,7 +14,7 @@ var data = {
 """
 
 data = {}
-groupby_columns = ['regionidcounty', 'regionidcity', 'regionidneighborhood', 'regionidzip']
+groupby_columns = ['regionidcity', 'regionidneighborhood', 'regionidzip']
 for df, name in zip([train_with_properties, properties], ['train', 'prop']):
     for feature in groupby_columns:
         # 1e6
@@ -24,7 +24,6 @@ for df, name in zip([train_with_properties, properties], ['train', 'prop']):
 
         tmp = pd.DataFrame({'lat': lat_dict.values, 'lng': lng_dict.values, 'cnt': cnt_dict.values})
         js = tmp.to_json(orient='records')
-
         key = '%s_%s_json' % (name, feature)
         val = {'max': cnt_dict.values.max(), 'data': json.loads(js)}
         data[key] = val
@@ -51,11 +50,19 @@ for feature in groupby_columns:
 
     tmp = pd.DataFrame({'lat': lat_dict.values, 'lng': lng_dict.values, 'cnt': cnt_dict.values})
     js = tmp.to_json(orient='records')
-
     key = 'outlier_%s_json' % feature
     val = {'max': cnt_dict.values.max(), 'data': json.loads(js)}
     data[key] = val
 
+    train_dict = train_with_properties.groupby([feature])['parcelid'].count()
+    # outlier / train for each region, scale = 1000
+    ratio_dict = ((cnt_dict / train_dict)[cnt_dict.index].fillna(0) * 1000).astype(int)
+
+    tmp = pd.DataFrame({'lat': lat_dict.values, 'lng': lng_dict.values, 'cnt': ratio_dict.values})
+    js = tmp.to_json(orient='records')
+    key = 'outlier_ratio_%s_json' % feature
+    val = {'max': ratio_dict.values.max(), 'data': json.loads(js)}
+    data[key] = val
 f = open('heatmap/data.js', 'w')
 f.write('var data = %s;' % json.dumps(data))
 f.close()
